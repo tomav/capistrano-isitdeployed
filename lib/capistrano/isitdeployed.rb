@@ -1,8 +1,9 @@
 require 'capistrano/isitdeployed/version'
 require 'capistrano/isitdeployed/config'
 require 'capistrano/isitdeployed/debug'
-require 'active_support/json'
+require 'capistrano/logger'
 require 'rest_client'
+require 'json'
 
 module Capistrano
   module Isitdeployed
@@ -49,7 +50,8 @@ module Capistrano
             if File.exists?(CONFIG_DEST)
               config  = Capistrano::Isitdeployed.load_user_config
               started = Capistrano::Isitdeployed.timestamp
-              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", ActiveSupport::JSON.encode({ :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+              set(:stage, "my platform") unless exists?(:stage)
+              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", JSON.generate({ :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
                 case response.code
                 when 201
                   logger.trace "IsItDeployed > New deploy created for #{application} to #{stage} with version: #{release_name}"
@@ -58,10 +60,10 @@ module Capistrano
                   set(:isitdeployed_started, started)
                   set(:isitdeployed_created, 1)
                 when 401
-                  logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your 'isitdeployed.yml'"                
+                  logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your '#{CONFIG_DEST}'"                
                   set(:isitdeployed_created, 0)
                 when 404
-                  logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your 'isitdeployed.yml'"                
+                  logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your '#{CONFIG_DEST}'"                
                   set(:isitdeployed_created, 0)
                 else
                   logger.trace "IsItDeployed > ERROR: Can't create deploy, server returned code #{response.code}"
@@ -92,14 +94,14 @@ module Capistrano
               config    = Capistrano::Isitdeployed.load_user_config
               stopped   = Capistrano::Isitdeployed.timestamp
               duration  = stopped.to_i - isitdeployed_started.to_i
-              RestClient.put(ENDPOINT + "/p/#{config['project_id']}/d/#{isitdeployed_did}", ActiveSupport::JSON.encode({ :status => isitdeployed_status, :stopped => stopped, :duration => duration, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+              RestClient.put(ENDPOINT + "/p/#{config['project_id']}/d/#{isitdeployed_did}", JSON.generate({ :status => isitdeployed_status, :stopped => stopped, :duration => duration, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
                 case response.code
                 when 204
                   logger.trace "IsItDeployed > Deploy ##{isitdeployed_did} has been updated for #{application} to #{stage}."
                 when 401
-                  logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your 'isitdeployed.yml'"                
+                  logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your '#{CONFIG_DEST}'"                
                 when 404
-                  logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your 'isitdeployed.yml'"                
+                  logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your '#{CONFIG_DEST}'"                
                 else
                   logger.trace "IsItDeployed > ERROR: Can't create deploy, server returned #{response.code}"
                 end
