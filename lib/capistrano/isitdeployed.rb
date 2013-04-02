@@ -1,7 +1,7 @@
 require 'capistrano/isitdeployed/version'
 require 'capistrano/isitdeployed/config'
 require 'capistrano/isitdeployed/debug'
-require 'active_support/core_ext'
+require 'active_support/json'
 require 'rest_client'
 
 module Capistrano
@@ -49,7 +49,7 @@ module Capistrano
             if File.exists?(CONFIG_DEST)
               config  = Capistrano::Isitdeployed.load_user_config
               started = Capistrano::Isitdeployed.timestamp
-              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", { :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }.to_json, :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", ActiveSupport::JSON.encode({ :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
                 case response.code
                 when 201
                   logger.trace "IsItDeployed > New deploy created for #{application} to #{stage} with version: #{release_name}"
@@ -92,7 +92,7 @@ module Capistrano
               config    = Capistrano::Isitdeployed.load_user_config
               stopped   = Capistrano::Isitdeployed.timestamp
               duration  = stopped.to_i - isitdeployed_started.to_i
-              RestClient.put(ENDPOINT + "/p/#{config['project_id']}/d/#{isitdeployed_did}", { :status => isitdeployed_status, :stopped => stopped, :duration => duration, :token => config['api_secret'] }.to_json, :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+              RestClient.put(ENDPOINT + "/p/#{config['project_id']}/d/#{isitdeployed_did}", ActiveSupport::JSON.encode({ :status => isitdeployed_status, :stopped => stopped, :duration => duration, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
                 case response.code
                 when 204
                   logger.trace "IsItDeployed > Deploy ##{isitdeployed_did} has been updated for #{application} to #{stage}."
