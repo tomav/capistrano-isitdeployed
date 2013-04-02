@@ -11,12 +11,8 @@ module Capistrano
       return Time.now.utc.strftime("%Y%m%d%H%M%S")        
     end
 
-    def self.get_config
-      if File.exists?(CONFIG_DEST)
-        return YAML.load_file(CONFIG_DEST)
-      else 
-        logger.trace "IsItDeployed > WARNING: No configuration file found, please run cap 'isit:setup'"
-      end      
+    def self.load_user_config
+      return YAML.load_file(CONFIG_DEST)      
     end
 
     def self.load_into(configuration)
@@ -50,27 +46,32 @@ module Capistrano
 
           desc "Creates a new deploy using the API"
           task :deploy do
-            config  = Capistrano::Isitdeployed.get_config
-            started = Capistrano::Isitdeployed.timestamp
-            RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", { :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }.to_json, :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
-              case response.code
-              when 201
-                logger.trace "IsItDeployed > New deploy created for #{application} to #{stage} with version: #{release_name}"
-                logger.trace "IsItDeployed > URL is #{ENDPOINT}/p/#{config['project_id']}"
-                set(:isitdeployed_did,     response.gsub(/\s+/, ""))
-                set(:isitdeployed_started, started)
-                set(:isitdeployed_created, 1)
-              when 401
-                logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your 'isitdeployed.yml'"                
-                set(:isitdeployed_created, 0)
-              when 404
-                logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your 'isitdeployed.yml'"                
-                set(:isitdeployed_created, 0)
-              else
-                logger.trace "IsItDeployed > ERROR: Can't create deploy, server returned code #{response.code}"
-                set(:isitdeployed_created, 0)
-              end
-            }        
+            if File.exists?(CONFIG_DEST)
+              config  = Capistrano::Isitdeployed.load_user_config
+              started = Capistrano::Isitdeployed.timestamp
+              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", { :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }.to_json, :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+                case response.code
+                when 201
+                  logger.trace "IsItDeployed > New deploy created for #{application} to #{stage} with version: #{release_name}"
+                  logger.trace "IsItDeployed > URL is #{ENDPOINT}/p/#{config['project_id']}"
+                  set(:isitdeployed_did,     response.gsub(/\s+/, ""))
+                  set(:isitdeployed_started, started)
+                  set(:isitdeployed_created, 1)
+                when 401
+                  logger.trace "IsItDeployed > ERROR: Invalid 'api_secret'. Check your 'isitdeployed.yml'"                
+                  set(:isitdeployed_created, 0)
+                when 404
+                  logger.trace "IsItDeployed > ERROR: Invalid 'project_id'. Check your 'isitdeployed.yml'"                
+                  set(:isitdeployed_created, 0)
+                else
+                  logger.trace "IsItDeployed > ERROR: Can't create deploy, server returned code #{response.code}"
+                  set(:isitdeployed_created, 0)
+                end
+              }
+            else 
+              logger.trace "IsItDeployed > WARNING: No configuration file found, please run cap 'isit:setup'"
+              set(:isitdeployed_created, 0)
+            end
           end
 
           namespace :status do
@@ -86,9 +87,9 @@ module Capistrano
           end
 
           desc "Updates deploy status using the API (succes or rollback)"
-            config  = Capistrano::Isitdeployed.get_config
             task :update do
             if isitdeployed_created === 1
+              config    = Capistrano::Isitdeployed.load_user_config
               stopped   = Capistrano::Isitdeployed.timestamp
               duration  = stopped.to_i - isitdeployed_started.to_i
               RestClient.put(ENDPOINT + "/p/#{config['project_id']}/d/#{isitdeployed_did}", { :status => isitdeployed_status, :stopped => stopped, :duration => duration, :token => config['api_secret'] }.to_json, :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
@@ -105,7 +106,6 @@ module Capistrano
               }                      
             end
           end
-
         end
       end
     end
