@@ -9,9 +9,9 @@ Gem::Specification.new do |gem|
   gem.version       = Capistrano::Isitdeployed::VERSION
   gem.authors       = ["Thomas VIAL"]
   gem.email         = ["rubygems@ifusio.com"]
-  gem.description   = %q{This is a pre-alpha build for test purpose.}
-  gem.summary       = %q{This is a pre-alpha build for test purpose.}
-  gem.homepage      = "http://tvi.al"
+  gem.description   = %q{Capistrano plugin for IsItDeployed service, which provides capistrano statistics - www.isitdeployed.com}
+  gem.summary       = %q{Capistrano plugin for IsItDeployed service, which provides capistrano statistics - www.isitdeployed.com}
+  gem.homepage      = "https://github.com/tomav/capistrano-isitdeployed"
 
   gem.files         = YAML.load_file('Manifest.yml')
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
