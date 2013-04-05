@@ -8,31 +8,38 @@ This plugin works as an interface between your [Capistrano](http://capistranorb.
 If you already use Capistrano, welcom on board!
 If not, you should! :-)
 
-## Installation
-
-### Rails users
-
-Add this line to your application's Gemfile:
-
-    gem 'capistrano-isitdeployed'
-
-And then execute:
-
-    $ bundle
-
-#### Not a rails user ? No problem
-
-Install it yourself as:
-
-    $ gem install capistrano-isitdeployed
-
 Has been tested with rails Rails3 and Symfony2 projects.
 
-## Usage
+## Installation
 
 * install the gem
 * create a project on [www.isitdeployed.com](http://www.isitdeployed.com) with a valid email address
 * you will receive the instructions to enable capistrano-isitdeployed in you deploy.rb
+
+## Detailed installation
+
+### 1. install gem 
+
+##### Rails users
+
+in your `Gemfile`, add:  
+`gem 'capistrano-isitdeployed'`  
+and run:  
+`bundle`
+
+##### Others
+
+`gem install capistrano-isitdeployed`  
+(you may have to use sudo)
+
+### 2. at the top of `config/deploy.rb`, add:  
+`require 'capistrano/isitdeployed'`
+
+### 3. generate config file running:
+`cap isit:setup`
+
+### 4. edit `config/isitdeployed.yml` config file
+Configure `project_id` and `api_secret` with values received on your email
 
 ## Contributing
 
@@ -41,3 +48,4 @@ Has been tested with rails Rails3 and Symfony2 projects.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
