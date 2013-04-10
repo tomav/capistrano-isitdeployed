@@ -5,10 +5,12 @@ This plugin works as an interface between your [Capistrano](http://capistranorb.
 * a deployment status page for you and your team which displays current deploy status (does not nead page reload for updates)
 * soon : deploys statistics
 
-If you already use Capistrano, welcom on board!
+And it's Free.
+
+If you already use Capistrano, welcome on board!
 If not, you should! :-)
 
-Has been tested with rails Rails3 and Symfony2 projects.
+Has been tested with Rails3 and Symfony2 projects.
 
 ## Installation
 

@@ -8,7 +8,7 @@ module Capistrano
           # Do not use unless you want to poluate your data
           namespace :isit do
             namespace :check do
-              desc "Check feature for success"
+              desc "DO NOT USE - Check feature for success"
               task :success do
                 find_and_execute_task("isit:deploy")
                 sleep(5)
@@ -16,7 +16,7 @@ module Capistrano
                 find_and_execute_task("isit:update")
               end
 
-              desc "Check feature for rollback"
+              desc "DO NOT USE - Check feature for rollback"
               task :rollback do
                 find_and_execute_task("isit:deploy")
                 sleep(5)

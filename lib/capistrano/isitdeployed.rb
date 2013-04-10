@@ -28,7 +28,8 @@ module Capistrano
 
         # task definitions
         namespace :isit do
-
+          # TODO: generate a pre-configured file using command line arguments
+          # cap isit-setup -project_id=x -api_secret=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           desc "Creates a configuration file"
           task :setup do
             if File.exists?(CONFIG_DEST)
@@ -51,12 +52,16 @@ module Capistrano
               config  = Capistrano::Isitdeployed.load_user_config
               started = Capistrano::Isitdeployed.timestamp
               set(:stage, "my platform") unless exists?(:stage)
-              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", JSON.generate({ :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'] }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
+              RestClient.post(ENDPOINT + "/p/#{config['project_id']}/d", JSON.generate({ :status => 1, :platform => "#{stage}", :release => "#{release_name}", :started => started, :token => config['api_secret'], :version => VERSION }), :content_type => :json, :accept => :json, :timeout => 5, :open_timeout => 5){ |response, request, result| response
                 case response.code
                 when 201
                   logger.trace "IsItDeployed > New deploy created for #{application} to #{stage} with version: #{release_name}"
                   logger.trace "IsItDeployed > URL is #{ENDPOINT}/p/#{config['project_id']}"
-                  set(:isitdeployed_did,     response.gsub(/\s+/, ""))
+                  json = JSON.parse(response)
+                  if json['latest_version'] > VERSION
+                    logger.trace "IsItDeployed > WARNING: Your 'capistrano-isitdeployed' gem is outdated. Consider upgrade to #{json['latest_version']}"                  
+                  end
+                  set(:isitdeployed_did,     json['deploy_id'])
                   set(:isitdeployed_started, started)
                   set(:isitdeployed_created, 1)
                 when 401
@@ -88,7 +93,7 @@ module Capistrano
             end
           end
 
-          desc "Updates deploy status using the API (succes or rollback)"
+          desc "Updates deploy status using the API (success or rollback)"
             task :update do
             if isitdeployed_created === 1
               config    = Capistrano::Isitdeployed.load_user_config
