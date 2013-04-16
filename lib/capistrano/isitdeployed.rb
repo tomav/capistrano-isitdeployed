@@ -23,8 +23,8 @@ module Capistrano
         before 'deploy',               'isit:deploy'
         after  'deploy',               'isit:status:success'
         after  'deploy:rollback',      'isit:status:rollback'
-        after  'isit:status_success',  'isit:update'
-        after  'isit:status_rollback', 'isit:update'
+        after  'isit:status:success',  'isit:update'
+        after  'isit:status:rollback', 'isit:update'
 
         # task definitions
         namespace :isit do

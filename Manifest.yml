@@ -6,4 +6,3 @@
 - lib/capistrano/isitdeployed/version.rb
 - lib/capistrano/isitdeployed/config.rb
 - lib/capistrano/isitdeployed/debug.rb
-- lib/capistrano/isitdeployed/template/isitdeployed.yml
